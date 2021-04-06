@@ -177,8 +177,9 @@ public class OGWaveView extends FrameLayout {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        waveformListener.waveformFinishInit(mContext, componentID);
         Log.e(TAG, "setURI: mMediaPlayer is"+mMediaPlayer.getDuration());
+
     }
 
     private WaveformView.WaveformListener waveformListener;
@@ -240,9 +241,9 @@ public class OGWaveView extends FrameLayout {
         @Override
         protected void onPostExecute(Float aFloat) {
             super.onPostExecute(aFloat);
-
-
-            mUIWave.updatePlayHead(aFloat);
+            if(aFloat != null) {     
+                mUIWave.updatePlayHead(aFloat);
+            }
         }
     }
 

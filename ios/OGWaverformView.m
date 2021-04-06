@@ -77,12 +77,17 @@
     NSURL *soundURL = [NSURL fileURLWithPath:_soundPath];
     NSError *error = nil;
     _player =[[AVPlayer alloc]initWithURL:soundURL];
-
+        
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
-    [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-    [audioSession setActive:YES error:nil];
 
+    [audioSession setCategory:AVAudioSessionCategoryPlayback
+                    mode:AVAudioSessionModeDefault
+                 options:AVAudioSessionCategoryOptionDefaultToSpeaker|AVAudioSessionCategoryOptionAllowBluetooth|AVAudioSessionCategoryOptionAllowBluetoothA2DP
+                   error:&error];
+    if (nil == error)
+    {
+        // continue here
+    }
     // Subscribe to the AVPlayerItem's DidPlayToEndTime notification.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(itemDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:_player.currentItem];
 

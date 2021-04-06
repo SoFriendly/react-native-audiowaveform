@@ -174,6 +174,15 @@ public class OGWaveManager extends SimpleViewManager<OGWaveView> implements Life
     }
 
     @Override
+    public void waveformFinishInit(ReactContext context, String componentID) {
+        WritableMap map = Arguments.createMap();
+        map.putString("componentID",componentID);
+        sendEvent(context, "OGFinishInit",map);
+        Log.e("OGTAGDEBUG::", "waveformFinishInit: " );
+
+    }
+
+    @Override
     public void waveformTouchStart(float x) {
 
     }

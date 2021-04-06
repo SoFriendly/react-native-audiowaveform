@@ -41,6 +41,9 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.SecureRandom;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
 
 /**
  * WaveformView is an Android view that displays a visual representation
@@ -192,6 +195,7 @@ public class WaveformView extends View {
         public void waveformDraw();
         public void waveformZoomIn();
         public void waveformZoomOut();
+        public void waveformFinishInit(ReactContext context, String componentID);
     };
 
     // Colors
