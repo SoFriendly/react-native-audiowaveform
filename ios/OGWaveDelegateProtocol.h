@@ -13,6 +13,7 @@
 
 -(void)OGWaveOnTouch:(OGWaverformView *)waveformView componentID:(NSString *)componentID;
 -(void)OGWaveFinishPlay:(OGWaverformView *)waveformView componentID:(NSString *)componentID;
+-(void)OGWaveFinishInit:(OGWaverformView *)waveformView componentID:(NSString *)componentID;
 
 @end
 

@@ -23,6 +23,7 @@ RCT_EXPORT_VIEW_PROPERTY(volume, float);
 RCT_EXPORT_VIEW_PROPERTY(componentID, NSString);
 RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onFinishPlay, RCTBubblingEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onFinishInit, RCTBubblingEventBlock);
 
 - (UIView *)view
 {
@@ -50,5 +51,11 @@ RCT_EXPORT_MODULE();
         return;
 
     waveformView.onFinishPlay(@{@"onFinishPlay":@"true",@"currentStatus":@"stopped",@"componentID":componentID});
+}
+-(void)OGWaveFinishInit:(OGWaverformView *)waveformView componentID:(NSString *)componentID{
+    if(!waveformView.onFinishInit)
+        return;
+
+    waveformView.onFinishInit(@{@"onFinishInit":@"true",@"currentStatus":@"stopped",@"componentID":componentID});
 }
 @end

@@ -55,7 +55,6 @@
 }
 
 -(void)drawWaveform{
-    //Waveform image
     if(!_isFrameReady || !_asset)
         return;
 
@@ -63,13 +62,25 @@
         [_waveformImage removeFromSuperview];
         _waveformImage = nil;
     }
-    NSLog(@"drawWaveform :::: %@",self);
-    _waveformImage = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height)];
-    [_waveformImage setImage:[UIImage imageWithData:[self renderPNGAudioPictogramLogForAssett:_asset]]];
-    _waveformImage.userInteractionEnabled = NO;
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSData *imgData = [self renderPNGAudioPictogramLogForAssett:self->_asset];
 
-    //Scrubb player
-    [self addSubview:_waveformImage];
+        dispatch_async(dispatch_get_main_queue(), ^(void) {
+             //stop your HUD here
+             //This is run on the main thread
+            self->_waveformImage = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height)];
+            [self->_waveformImage setImage:[UIImage imageWithData:imgData]];
+            self->_waveformImage.userInteractionEnabled = NO;
+
+            //Scrubb player
+            [self addSubview:self->_waveformImage];
+
+        });
+    });
+    //Waveform image
+   
+    
 }
 
 -(void)initAudio{
@@ -186,15 +197,47 @@
     NSLog(@"SRC ::: %@",src);
 
     //Retrieve audio file
-    NSString *uri =  [src objectForKey:@"uri"];
+    NSString *uri = [src objectForKey:@"uri"];
 
+    NSURL *urlMain = nil;
     //Since any file sent from JS side in Reeact Native is through HTTP, and
     //AVURLAsset just works wiht local files, then, downloading and processing.
-    NSURL  *remoteUrl = [NSURL URLWithString:uri];
+    if ([uri rangeOfString:@"file://"].location == NSNotFound) {
+        urlMain = [NSURL URLWithString:uri];
+        
+        NSURLRequest *request = [NSURLRequest requestWithURL:urlMain cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30];
+        NSURLConnection *connection = [[NSURLConnection alloc]initWithRequest:request delegate:self startImmediately:YES ];
+        
+    } else {
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        NSString *cachePath = [paths objectAtIndex:0];
+        BOOL isDir = NO;
+        NSError *error;
 
-    NSLog(@"NSURLRequest :: %@",remoteUrl);
-    NSURLRequest *request = [NSURLRequest requestWithURL:remoteUrl cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30];
-    NSURLConnection *connection = [[NSURLConnection alloc]initWithRequest:request delegate:self startImmediately:YES ];
+        if (! [[NSFileManager defaultManager] fileExistsAtPath:cachePath isDirectory:&isDir] && isDir == NO) {
+            [[NSFileManager defaultManager] createDirectoryAtPath:cachePath withIntermediateDirectories:NO attributes:nil error:&error];
+        }
+        
+        NSString *theFileName = [uri lastPathComponent];
+
+        NSString *path_to_file = [cachePath stringByAppendingPathComponent:theFileName];
+        urlMain = [NSURL fileURLWithPath:path_to_file];
+        _soundPath = urlMain.absoluteString;
+        _asset = [AVURLAsset assetWithURL: urlMain];
+        
+        NSLog(@"Asset details == %@",_asset.tracks);
+
+        [self drawWaveform];
+
+        [self addScrubber];
+
+        [self initAudio];
+
+        if(_autoPlay)
+            [self playAudio];
+
+    }
+    
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
@@ -335,8 +378,6 @@
 
             sampleRate = fmtDesc->mSampleRate;
             channelCount = fmtDesc->mChannelsPerFrame;
-
-            //    NSLog(@"channels:%u, bytes/packet: %u, sampleRate %f",fmtDesc->mChannelsPerFrame, fmtDesc->mBytesPerPacket,fmtDesc->mSampleRate);
         }
     }
 
@@ -453,6 +494,7 @@
     }
 
     NSLog(@"DCDCDCDCD %@",self);
+    [_delegate OGWaveFinishInit:self componentID:_componentID];
 
     return finalData;
 }
